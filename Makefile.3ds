@@ -1,0 +1,79 @@
+.SUFFIXES:
+
+ifeq ($(strip $(DEVKITARM)),)
+$(error "DEVKITARM is missing. use the devkitPro shell, not normal cmd")
+endif
+
+TOPDIR ?= $(CURDIR)
+include $(DEVKITARM)/3ds_rules
+
+TARGET := srb2-o3ds
+BUILD := build-3ds
+SOURCES := src src/blua src/netcode src/dummy
+INCLUDES := src src/blua src/netcode
+
+APP_TITLE := SRB2 2.2.15 o3DS POC
+APP_DESCRIPTION := GFZ1 or bust
+APP_AUTHOR := poc build
+
+
+ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+
+CFLAGS := -g -Wall -O2 -std=gnu11 -fwrapv -mword-relocations -ffunction-sections $(ARCH)
+CFLAGS += $(INCLUDE) -D__3DS__ -D_3DS -DCOMPVERSION -DNDEBUG \
+	-DNOHW -DNOMD5 -DNOPOSTPROCESSING -DNO_IPV6 -DNOUPNP -DNOEXECINFO \
+	-DNOTHREADS -DNOMUMBLE -DNOCURL -DNO_MIDI -DHAVE_ZLIB -DHAVE_PNG
+
+ASFLAGS := -g $(ARCH)
+LDFLAGS := -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,--gc-sections
+LIBS := -lpng -lz -lctru -lm
+LIBDIRS := $(CTRULIB) $(PORTLIBS)
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+export OUTPUT := $(CURDIR)/$(TARGET)
+export TOPDIR := $(CURDIR)
+export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
+export DEPSDIR := $(CURDIR)/$(BUILD)
+
+CFILES := $(shell cat src/Sourcefile) \
+	$(shell cat src/blua/Sourcefile) \
+	$(shell cat src/netcode/Sourcefile) \
+	$(shell cat src/dummy/Sourcefile) \
+	comptime.c
+
+export LD := $(CC)
+export OFILES_SOURCES := $(CFILES:.c=.o)
+export OFILES := $(OFILES_SOURCES)
+export HFILES :=
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+	$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+	-I$(CURDIR)/$(BUILD)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export _3DSXDEPS := $(OUTPUT).smdh
+export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
+
+.PHONY: all clean
+
+all: $(BUILD)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.3ds
+
+$(BUILD):
+	@mkdir -p $@
+
+clean:
+	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).map
+
+else
+
+$(OUTPUT).3dsx: $(OUTPUT).elf $(_3DSXDEPS)
+$(OUTPUT).elf: $(OFILES)
+
+$(OUTPUT).smdh: $(TOPDIR)/icon.png
+	@echo "Generating SMDH metadata..."
+	@smdhtool --create "$(strip $(APP_TITLE))" "$(strip $(APP_DESCRIPTION))" "$(strip $(APP_AUTHOR))" $(TOPDIR)/icon.png $@
+
+
+-include $(DEPSDIR)/*.d
+
+endif
