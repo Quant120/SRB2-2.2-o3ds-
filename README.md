@@ -15,8 +15,10 @@
 - libopenmpt (Linux/OS X only)
 
 ## Compiling
-
+Use msys2 or something then run make -f Makefile.3ds -j2 
 See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_compiling)
 
 ## Disclaimer
 Sonic Team Junior is in no way affiliated with SEGA or Sonic Team. We do not claim ownership of any of SEGA's intellectual property used in SRB2.
+
+This is just a proof of concept don't expect egg Rock zone 2 to run at 60 fps ANY TIME SOON (impossible)
