@@ -12,9 +12,9 @@ BUILD := build-3ds
 SOURCES := src src/blua src/netcode src/dummy
 INCLUDES := src src/blua src/netcode
 
-APP_TITLE := SRB2 2.2.15 o3DS POC
-APP_DESCRIPTION := GFZ1 or bust
-APP_AUTHOR := poc build
+APP_TITLE := SRB2 2.2.15 3ds
+APP_DESCRIPTION := Just  proof of concept
+APP_AUTHOR := Quan120
 
 
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft

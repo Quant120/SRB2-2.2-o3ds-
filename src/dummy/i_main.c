@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 u32 __stacksize__ = 1024 * 1024;
+u32 __ctru_linear_heap_size = 8 * 1024 * 1024;
 #include "../doomdef.h"
 #include "../d_main.h"
 #include "../i_system.h"

@@ -843,9 +843,8 @@ Rloadflats (INT32 i, INT32 w)
 		if (Picture_IsLumpPNG(header, lumplength))
 		{
 			INT32 texw, texh;
-			UINT8 pnghead[33];
-			if (W_ReadLumpHeaderPwad(wadnum, lumpnum, pnghead, sizeof pnghead, 0) == sizeof pnghead
-			 && Picture_PNGDimensions(pnghead, &texw, &texh, NULL, NULL, sizeof pnghead))
+			UINT8 *flatlump = W_CacheLumpNumPwad(wadnum, lumpnum, PU_CACHE);
+			if (Picture_PNGDimensions((UINT8 *)flatlump, &texw, &texh, NULL, NULL, lumplength))
 			{
 				width = (INT16)texw;
 				height = (INT16)texh;
@@ -855,6 +854,7 @@ Rloadflats (INT32 i, INT32 w)
 				width = 1;
 				height = 1;
 			}
+			Z_Free(flatlump);
 		}
 #endif
 
