@@ -2106,9 +2106,7 @@ static void Got_Mapcmd(UINT8 **cp, INT32 playernum)
 	mapnumber = M_MapNumber(mapname[3], mapname[4]);
 	LUA_HookInt(mapnumber, HOOK(MapChange));
 
-	CONS_Printf("before G_InitNew\n");
 	G_InitNew(ultimatemode, mapname, resetplayer, skipprecutscene, FLS);
-	CONS_Printf("after G_InitNew\n");
 	if (demoplayback && !timingdemo)
 		precache = true;
 	if (timingdemo)

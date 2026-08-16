@@ -881,7 +881,6 @@ static void P_SpawnMapThings(boolean spawnemblems)
 
 	for (i = 0, mt = mapthings; i < nummapthings; i++, mt++)
 	{
-		CONS_Printf("thing %u type %d\n", (unsigned)i, mt->type);
 
 		if (mt->type == 1700 // MT_AXIS
 			|| mt->type == 1701 // MT_AXISTRANSFER
@@ -8045,12 +8044,10 @@ boolean P_LoadLevel(boolean fromnetsave, boolean reloadinggamestate)
 
 	P_InitSlopes();
 
-	CONS_Printf("before P_Load\n");
 
 if (!P_LoadMapFromFile())
     return false;
 
-CONS_Printf("after P_Load\n");//MORE DEBUG LETS GOOO
 
 	if (!demoplayback)
 	{
@@ -8071,15 +8068,11 @@ CONS_Printf("after P_Load\n");//MORE DEBUG LETS GOOO
 	}
 
 	// init anything that P_SpawnSlopes/P_LoadThings needs to know
-	CONS_Printf("before\n");
 	P_InitSpecials();
-	CONS_Printf("after\n");
 
 	P_SpawnSlopes(fromnetsave);
 
-	CONS_Printf("before mapthings\n");
 	P_SpawnMapThings(!fromnetsave);
-	CONS_Printf("after mapthings\n");
 	skyboxmo[0] = skyboxviewpnts[0];
 	skyboxmo[1] = skyboxcenterpnts[0];
 
@@ -8128,9 +8121,7 @@ CONS_Printf("after P_Load\n");//MORE DEBUG LETS GOOO
 
 	if (precache || dedicated)
 {
-	CONS_Printf("before precache\n");
 	R_PrecacheLevel();
-	CONS_Printf("after precache\n");//TO DO : GET RID OF DEBUG 15/08/26
 }
 
 	nextmapoverride = 0;

@@ -1192,7 +1192,6 @@ void R_InitData(void)
 
 	CONS_Printf("R_LoadTextures()...\n");
 	R_LoadTextures();
-	CONS_Printf("textures done\n"); //more debugging
 
 	CONS_Printf("P_InitPicAnims()...\n");
 	P_InitPicAnims();

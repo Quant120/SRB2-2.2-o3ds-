@@ -13,6 +13,7 @@
 #include "../d_main.h"
 #include "../i_system.h"
 #include "../i_time.h"
+#include "../i_joy.h"
 
 FILE *logstream = NULL;
 UINT8 graphics_started = 0;
@@ -23,6 +24,7 @@ static int nquits;
 static int started;
 static int shuttingdown;
 static ticcmd_t nothing[2];
+#define CPAD_MAX_DELTA 160
 
 static void cleartop(void)
 {
@@ -54,10 +56,58 @@ UINT64 I_GetPrecisePrecision(void){ return SYSCLOCK_ARM11; }
 
 void I_GetEvent(void)
 {
+	const u32 dskeys[]={KEY_A,KEY_B,KEY_X,KEY_Y,KEY_L,KEY_R,KEY_START,KEY_SELECT,KEY_DUP,KEY_DDOWN,KEY_DLEFT,KEY_DRIGHT};
+	circlePosition cpos;
+	event_t event;
+	u32 up,down;
+	UINT32 i;
+	INT32 amp=JOYAXISRANGE/CPAD_MAX_DELTA;
+
 	if (!aptMainLoop()) I_Quit();
+	hidScanInput();
+	up=keysUp();
+	down=keysDown();
+	hidCircleRead(&cpos);
+
+	event.type=ev_joystick;
+	event.key=0;
+	event.x=0;
+	event.y=-cpos.dy*amp;
+	event.repeated=false;
+	D_PostEvent(&event);
+
+	event.key=1;
+	event.x=(INT32)((float)(cpos.dx*amp)*0.88f);
+	event.y=0;
+	D_PostEvent(&event);
+
+	for(i=0;i<sizeof(dskeys)/sizeof(dskeys[0]);i++)
+	{
+		if(!((up|down)&dskeys[i])) continue;
+		event.type=(up&dskeys[i])?ev_keyup:ev_keydown;
+		event.x=event.y=0;
+		event.repeated=false;
+		switch(dskeys[i])
+		{
+			case KEY_A: event.key=KEY_JOY1+0; break;
+			case KEY_B: event.key=KEY_JOY1+1; break;
+			case KEY_X: event.key=KEY_JOY1+2; break;
+			case KEY_Y: event.key=KEY_JOY1+3; break;
+			case KEY_L: event.key=KEY_JOY1+4; break;
+			case KEY_R: event.key=KEY_JOY1+5; break;
+			case KEY_SELECT: event.key=KEY_JOY1+6; break;
+			case KEY_START: event.key=KEY_JOY1+7; break;
+			case KEY_DUP: event.key=KEY_HAT1+0; break;
+			case KEY_DDOWN: event.key=KEY_HAT1+1; break;
+			case KEY_DLEFT: event.key=KEY_HAT1+2; break;
+			case KEY_DRIGHT: event.key=KEY_HAT1+3; break;
+			default: continue;
+		}
+		D_PostEvent(&event);
+	}
 }
 
-void I_OsPolling(void){}
+void I_OsPolling(void){I_GetEvent();}
 ticcmd_t *I_BaseTiccmd(void){ memset(nothing,0,sizeof(nothing[0]));return &nothing[0]; }
 ticcmd_t *I_BaseTiccmd2(void){ memset(&nothing[1],0,sizeof(nothing[1]));return &nothing[1]; }
 
@@ -80,10 +130,10 @@ void I_Tactile(FFType Type,const JoyFF_t *Effect){(void)Type;(void)Effect;}
 void I_Tactile2(FFType Type,const JoyFF_t *Effect){(void)Type;(void)Effect;}
 void I_JoyScale(void){}
 void I_JoyScale2(void){}
-void I_InitJoystick(void){}
+void I_InitJoystick(void){Joystick.bGamepadStyle=false;}
 void I_InitJoystick2(void){}
-INT32 I_NumJoys(void){return 0;}
-const char *I_GetJoyName(INT32 n){(void)n;return NULL;}
+INT32 I_NumJoys(void){return 1;}
+const char *I_GetJoyName(INT32 n){(void)n;return "Nintendo 3DS";}
 
 #ifndef NOMUMBLE
 void I_UpdateMumble(const mobj_t *m,const listener_t l){(void)m;(void)l;}

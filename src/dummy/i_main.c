@@ -1,7 +1,7 @@
 #include <3ds.h>
 #include <unistd.h>
 
-u32 __stacksize__ = 128 * 1024;
+u32 __stacksize__ = 1024 * 1024;
 
 #include "../doomdef.h"
 #include "../d_main.h"
@@ -12,7 +12,6 @@ int main(int argc, char **argv)
 {
 	static char *a[] = {
 		"srb2-o3ds",
-		"-warp", "GFZ1",
 		"-noaudio",
 		"-width", "320",
 		"-height", "200",

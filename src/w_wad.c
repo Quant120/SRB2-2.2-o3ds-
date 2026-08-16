@@ -2145,7 +2145,7 @@ size_t W_ReadLumpHeaderPwad(UINT16 wad, UINT16 lump, void *dest, size_t size, si
 	case CM_DEFLATE: // Is it compressed via DEFLATE? Very common in ZIPs/PK3s, also what most doom-related editors support.
 		{
 			UINT8 *rawData; // The lump's raw data.
-			UINT8 *decData = NULL; // Lump's decompressed real data.
+			UINT8 *decData; // Lump's decompressed real data.
 
 			int zErr; // Helper var.
 			z_stream strm;
@@ -2153,10 +2153,8 @@ size_t W_ReadLumpHeaderPwad(UINT16 wad, UINT16 lump, void *dest, size_t size, si
 			unsigned long decSize = l->size;
 
 			rawData = Z_Malloc(rawSize, PU_STATIC, NULL);
-			if (offset)
-				decData = Z_Malloc(decSize, PU_STATIC, NULL);
+			decData = Z_Malloc(decSize, PU_STATIC, NULL);
 
-			fseek(handle, (long)l->position, SEEK_SET);
 			if (fread(rawData, 1, rawSize, handle) < rawSize)
 				I_Error("wad %d, lump %d: cannot read compressed data", wad, lump);
 
@@ -2164,33 +2162,25 @@ size_t W_ReadLumpHeaderPwad(UINT16 wad, UINT16 lump, void *dest, size_t size, si
 			strm.zfree = Z_NULL;
 			strm.opaque = Z_NULL;
 
-			strm.total_in = 0;
-			strm.avail_in = rawSize;
-			strm.total_out = 0;
-			strm.avail_out = offset ? decSize : size;
+			strm.total_in = strm.avail_in = rawSize;
+			strm.total_out = strm.avail_out = decSize;
 
 			strm.next_in = rawData;
-			strm.next_out = offset ? decData : dest;
+			strm.next_out = decData;
 
 			zErr = inflateInit2(&strm, -15);
 			if (zErr == Z_OK)
 			{
-				do
-					zErr = inflate(&strm, Z_NO_FLUSH);
-				while (zErr == Z_OK && strm.avail_out);
-
-				if (offset)
+				zErr = inflate(&strm, Z_FINISH);
+				if (zErr == Z_STREAM_END)
 				{
-					if (strm.total_out < offset + size)
-						size = 0;
-					else
-						M_Memcpy(dest, decData + offset, size);
+					M_Memcpy(dest, decData, size);
 				}
-				else if (strm.total_out < size)
+				else
+				{
 					size = 0;
-
-				if (!size && zErr != Z_STREAM_END)
 					zerr(zErr);
+				}
 
 				(void)inflateEnd(&strm);
 			}
@@ -2201,12 +2191,10 @@ size_t W_ReadLumpHeaderPwad(UINT16 wad, UINT16 lump, void *dest, size_t size, si
 			}
 
 			Z_Free(rawData);
-			if (decData)
-				Z_Free(decData);
+			Z_Free(decData);
 
 			return size;
 		}
-
 #endif
 	default:
 		I_Error("wad %d, lump %d: unsupported compression type!", wad, lump);
@@ -2249,9 +2237,8 @@ void *W_CacheLumpNumPwad(UINT16 wad, UINT16 lump, INT32 tag)
 	lumpcache = wadfiles[wad]->lumpcache;
 	if (!lumpcache[lump])
 	{
-		void *ptr = Z_Malloc(W_LumpLengthPwad(wad, lump), PU_STATIC, &lumpcache[lump]);
+		void *ptr = Z_Malloc(W_LumpLengthPwad(wad, lump), tag, &lumpcache[lump]);
 		W_ReadLumpHeaderPwad(wad, lump, ptr, 0, 0);  // read the lump in full
-		Z_ChangeTag(ptr, tag);
 	}
 	else
 		Z_ChangeTag(lumpcache[lump], tag);
@@ -2450,28 +2437,20 @@ boolean W_ReadPatchHeaderPwad(UINT16 wadnum, UINT16 lumpnum, INT16 *width, INT16
 	if (Picture_IsLumpPNG(header, len))
 	{
 #ifndef NO_PNG_LUMPS
+		UINT8 *png = W_CacheLumpNumPwad(wadnum, lumpnum, PU_CACHE);
+
 		INT32 pwidth = 0, pheight = 0;
 
-		if (!topoffset && !leftoffset)
+		if (!Picture_PNGDimensions(png, &pwidth, &pheight, topoffset, leftoffset, len))
 		{
-			UINT8 pnghead[33];
-			if (W_ReadLumpHeaderPwad(wadnum, lumpnum, pnghead, sizeof pnghead, 0) != sizeof pnghead
-			 || !Picture_PNGDimensions(pnghead, &pwidth, &pheight, NULL, NULL, sizeof pnghead))
-				return false;
-		}
-		else
-		{
-			UINT8 *png = W_CacheLumpNumPwad(wadnum, lumpnum, PU_CACHE);
-			if (!Picture_PNGDimensions(png, &pwidth, &pheight, topoffset, leftoffset, len))
-			{
-				Z_Free(png);
-				return false;
-			}
 			Z_Free(png);
+			return false;
 		}
 
 		*width = (INT16)pwidth;
 		*height = (INT16)pheight;
+
+		Z_Free(png);
 
 		return true;
 #else

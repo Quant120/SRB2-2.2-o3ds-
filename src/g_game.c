@@ -1878,7 +1878,6 @@ void G_DoLoadLevel(boolean resetplayer)
 	}
 
 	// Setup the level.
-CONS_Printf("before P_LoadLevel\n");
 
 if (!P_LoadLevel(false, false))
 {
@@ -1886,7 +1885,6 @@ if (!P_LoadLevel(false, false))
 	return;
 }
 
-CONS_Printf("after P_LoadLevel\n");// debuggggggggggggg
 
 	P_FindEmerald();
 
