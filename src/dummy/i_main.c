@@ -2,7 +2,6 @@
 #include <unistd.h>
 
 u32 __stacksize__ = 1024 * 1024;
-
 #include "../doomdef.h"
 #include "../d_main.h"
 #include "../i_system.h"
@@ -20,7 +19,7 @@ int main(int argc, char **argv)
 	};
 
 	(void)argc; (void)argv;
-	myargc = 10;
+	myargc = 8;
 	myargv = a;
 
 	I_StartupSystem();
