@@ -24,6 +24,8 @@ On Windows, place makerom.exe and bannertool.exe in the project root, then build
 
 make -f Makefile.3ds -j2 (if you don't have a potato)
 
+For Linux : ¯\_(ツ)_/¯
+
 See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_compiling)
 
 ## Disclaimer
