@@ -11,7 +11,7 @@
 #include "../z_zone.h"
 #include "../byteptr.h"
 
-#define SAMPLERATE 22050
+#define SAMPLERATE 11025
 #define BUFFERSIZE 1024
 #define MUSICFILE "sdmc:/3ds/srb2/.srb2music.ogg"
 
@@ -35,14 +35,14 @@ void I_StartupSound(void)
 		return;
 	}
 
-	if(Mix_OpenAudio(SAMPLERATE,AUDIO_S16SYS,2,BUFFERSIZE)<0)
+	if(Mix_OpenAudio(SAMPLERATE,AUDIO_U8,1,BUFFERSIZE)<0)
 	{
 		printf("SDL mixer: %s\n",Mix_GetError());
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		return;
 	}
 
-	Mix_AllocateChannels(256);
+	Mix_AllocateChannels(16);
 	sound_started=true;
 }
 
@@ -61,9 +61,7 @@ static Mix_Chunk *ds2chunk(void *stream)
 {
 	UINT16 ver,freq;
 	UINT32 samples,newsamples,i;
-	UINT8 *sound;
-	SINT8 *s;
-	INT16 *d,o;
+	UINT8 *sound,*s,*d;
 
 	ver=READUINT16(stream);
 	if(ver!=3) return NULL;
@@ -73,22 +71,20 @@ static Mix_Chunk *ds2chunk(void *stream)
 	if(!freq||!samples) return NULL;
 
 	newsamples=(UINT32)(((UINT64)samples*SAMPLERATE+freq-1)/freq);
-	if(!newsamples||newsamples>=UINT32_MAX>>2) return NULL;
+	if(!newsamples) return NULL;
 
-	sound=Z_Malloc(newsamples<<2,PU_SOUND,NULL);
-	s=(SINT8 *)stream;
-	d=(INT16 *)sound;
+	sound=Z_Malloc(newsamples,PU_SOUND,NULL);
+	s=(UINT8 *)stream;
+	d=sound;
 
 	for(i=0;i<newsamples;i++)
 	{
 		UINT32 n=(UINT32)(((UINT64)i*freq)/SAMPLERATE);
 		if(n>=samples) n=samples-1;
-		o=((INT16)s[n]+0x80)<<8;
-		*d++=o;
-		*d++=o;
+		*d++=s[n];
 	}
 
-	return Mix_QuickLoad_RAW(sound,(Uint32)((UINT8 *)d-sound));
+	return Mix_QuickLoad_RAW(sound,(Uint32)(d-sound));
 }
 
 void *I_GetSfx(sfxinfo_t *sfx)
@@ -151,11 +147,9 @@ INT32 I_StartSound(sfxenum_t id,UINT8 vol,UINT8 sep,UINT8 pitch,UINT8 priority,I
 	volume=(((UINT16)vol+1)*(UINT16)sfx_volume)/62;
 	handle=Mix_PlayChannel(channel,S_sfx[id].data,0);
 	if(handle>=0)
-	{
 		Mix_Volume(handle,volume);
-		Mix_SetPanning(handle,min((UINT16)(0xff-sep)<<1,0xff),min((UINT16)sep<<1,0xff));
-	}
 
+	(void)sep;
 	(void)pitch;
 	(void)priority;
 	return handle;
@@ -179,7 +173,7 @@ void I_UpdateSoundParams(INT32 handle,UINT8 vol,UINT8 sep,UINT8 pitch)
 
 	volume=(((UINT16)vol+1)*(UINT16)sfx_volume)/62;
 	Mix_Volume(handle,volume);
-	Mix_SetPanning(handle,min((UINT16)(0xff-sep)<<1,0xff),min((UINT16)sep<<1,0xff));
+	(void)sep;
 	(void)pitch;
 }
 

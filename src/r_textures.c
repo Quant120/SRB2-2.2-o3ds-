@@ -566,6 +566,12 @@ UINT8 *R_GenerateTexture(size_t texnum)
 		column->pixels = blocktex + (texture->height * x);
 	}
 
+	Z_Free(opaque_pixels);
+	Z_Free(temp_columns);
+	Z_Free(column_posts);
+	if (temp_posts)
+		Z_Free(temp_posts);
+
 done:
 	// Now that the texture has been built in column cache, it is purgable from zone memory.
 	Z_ChangeTag(block, PU_CACHE);
@@ -600,12 +606,13 @@ UINT8 *R_GetFlatForTexture(size_t texnum)
 			memcpy(texture->flat, pdata, lumplength);
 		}
 
-		Z_SetUser(texture->flat, &texture->flat);
-
-		Z_Free(pdata);
+				Z_Free(pdata);
 	}
 	else
 		texture->flat = (UINT8 *)Picture_TextureToFlat(texnum);
+
+	Z_SetUser(texture->flat, (void **)&texture->flat);
+	Z_ChangeTag(texture->flat, PU_CACHE);
 
 	flatmemory += texture->width * texture->height;
 

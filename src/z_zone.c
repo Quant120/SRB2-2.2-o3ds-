@@ -74,6 +74,38 @@ typedef struct memblock_s
 // both the head and tail of the zone memory block list
 static memblock_t head;
 
+static void Z_PrintLargestStatic(void)
+{
+	memblock_t *rover;
+	size_t biggest[10]={0};
+	size_t i,j;
+
+	for(rover=head.next;rover!=&head;rover=rover->next)
+	{
+		if(rover->tag!=PU_STATIC)
+			continue;
+
+		for(i=0;i<10;i++)
+		{
+			if(rover->realsize>biggest[i])
+			{
+				for(j=9;j>i;j--)
+					biggest[j]=biggest[j-1];
+
+				biggest[i]=rover->realsize;
+				break;
+			}
+		}
+	}
+
+	printf("largest static:\n");
+
+	for(i=0;i<10;i++)
+		printf("%lu: %lu KB\n",
+			(unsigned long)(i+1),
+			(unsigned long)(biggest[i]>>10));
+}
+
 //
 // Function prototypes
 //
@@ -191,9 +223,33 @@ static void *xm(size_t size)
 		p = malloc(padedsize);
 
 		if (p == NULL)
-		{
-			I_Error("Out of memory allocating %s bytes", sizeu1(size));
-		}
+{
+	printf("\nOOM %lu bytes\n",(unsigned long)size);
+
+	printf("total  %lu KB\n",(unsigned long)(Z_TotalUsage()>>10));
+
+	printf("static %lu KB\n",(unsigned long)(Z_TagUsage(PU_STATIC)>>10));
+	printf("sound  %lu KB\n",(unsigned long)(Z_TagUsage(PU_SOUND)>>10));
+	printf("music  %lu KB\n",(unsigned long)(Z_TagUsage(PU_MUSIC)>>10));
+	printf("level  %lu KB\n",(unsigned long)(Z_TagUsage(PU_LEVEL)>>10));
+	printf("levsp  %lu KB\n",(unsigned long)(Z_TagUsage(PU_LEVSPEC)>>10));
+
+	printf("sprite %lu KB\n",(unsigned long)(Z_TagUsage(PU_SPRITE)>>10));
+	printf("hud    %lu KB\n",(unsigned long)(Z_TagUsage(PU_HUDGFX)>>10));
+
+	printf("patch  %lu KB\n",(unsigned long)(Z_TagUsage(PU_PATCH)>>10));
+	printf("pdata  %lu KB\n",(unsigned long)(Z_TagUsage(PU_PATCH_DATA)>>10));
+	printf("plow   %lu KB\n",(unsigned long)(Z_TagUsage(PU_PATCH_LOWPRIORITY)>>10));
+	printf("prot   %lu KB\n",(unsigned long)(Z_TagUsage(PU_PATCH_ROTATED)>>10));
+
+	printf("cache  %lu KB\n",(unsigned long)(Z_TagUsage(PU_CACHE)>>10));
+
+	fflush(stdout);
+
+	Z_PrintLargestStatic();
+
+	I_Error("Out of memory allocating %s bytes",sizeu1(size));
+}
 	}
 
 	return p;
