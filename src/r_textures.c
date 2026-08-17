@@ -268,6 +268,7 @@ UINT8 *R_GenerateTexture(size_t texnum)
 	texpatch_t *patch;
 	int x, x1, x2, i, width, height;
 	size_t blocksize;
+	size_t pixeloffset;
 	unsigned *column_posts;
 	UINT8 *opaque_pixels;
 	column_t *columns, *temp_columns;
@@ -344,14 +345,15 @@ UINT8 *R_GenerateTexture(size_t texnum)
 
 			Patch_CalcDataSizes(realpatch, &total_pixels, &total_posts);
 
-			blocksize = (sizeof(column_t) * texture->width) + (sizeof(post_t) * total_posts) + (sizeof(UINT8) * total_pixels);
+			pixeloffset = (total_pixels + 3) & ~(size_t)3;
+			blocksize = (sizeof(column_t) * texture->width) + (sizeof(post_t) * total_posts) + pixeloffset;
 			texturememory += blocksize;
 
 			block = Z_Calloc(blocksize, PU_STATIC, &texturecache[texnum]);
 			blocktex = block;
 
-			columns = (column_t *)(block + (sizeof(UINT8) * total_pixels));
-			posts = (post_t *)(block + (sizeof(UINT8) * total_pixels) + (sizeof(column_t) * texture->width));
+			columns = (column_t *)(block + pixeloffset);
+			posts = (post_t *)(block + pixeloffset + (sizeof(column_t) * texture->width));
 
 			texturecolumns[texnum] = columns;
 
@@ -537,7 +539,8 @@ UINT8 *R_GenerateTexture(size_t texnum)
 #endif
 	}
 
-	blocksize = (sizeof(column_t) * texture->width) + (sizeof(post_t) * total_posts) + (sizeof(UINT8) * total_pixels);
+	pixeloffset = (total_pixels + 3) & ~(size_t)3;
+	blocksize = (sizeof(column_t) * texture->width) + (sizeof(post_t) * total_posts) + pixeloffset;
 	texturememory += blocksize;
 
 	block = Z_Calloc(blocksize, PU_STATIC, &texturecache[texnum]);
@@ -547,8 +550,8 @@ UINT8 *R_GenerateTexture(size_t texnum)
 
 	Z_Free(temp_block);
 
-	columns = (column_t *)(block + (sizeof(UINT8) * total_pixels));
-	posts = (post_t *)(block + (sizeof(UINT8) * total_pixels) + (sizeof(column_t) * texture->width));
+	columns = (column_t *)(block + pixeloffset);
+	posts = (post_t *)(block + pixeloffset + (sizeof(column_t) * texture->width));
 
 	memcpy(columns, temp_columns, sizeof(column_t) * texture->width);
 	memcpy(posts, temp_posts, sizeof(post_t) * total_posts);

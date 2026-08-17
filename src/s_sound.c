@@ -2153,11 +2153,19 @@ static boolean S_LoadMusic(const char *mname)
 	{
 		strncpy(music_name, mname, 7);
 		music_name[6] = 0;
+#ifdef __3DS__
+		Z_Free(mdata);
+		music_data = NULL;
+#else
 		music_data = mdata;
+#endif
 		return true;
 	}
 	else
 	{
+#ifdef __3DS__
+		Z_Free(mdata);
+#endif
 		CONS_Alert(CONS_ERROR, "Music %.6s could not be loaded: engine failure!\n", mname);
 		return false;
 	}
@@ -2168,7 +2176,8 @@ static void S_UnloadMusic(void)
 	I_UnloadSong();
 
 #ifndef HAVE_SDL //SDL uses RWOPS
-	Z_ChangeTag(music_data, PU_CACHE);
+	if (music_data)
+		Z_ChangeTag(music_data, PU_CACHE);
 #endif
 	music_data = NULL;
 

@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 u32 __stacksize__ = 1024 * 1024;
-u32 __ctru_linear_heap_size = 8 * 1024 * 1024;
+u32 __ctru_linear_heap_size = 2 * 1024 * 1024;
 #include "../doomdef.h"
 #include "../d_main.h"
 #include "../i_system.h"
@@ -12,7 +12,6 @@ int main(int argc, char **argv)
 {
 	static char *a[] = {
 		"srb2-o3ds",
-		"-noaudio",
 		"-width", "320",
 		"-height", "200",
 		"-home", "sdmc:/3ds",
@@ -20,12 +19,11 @@ int main(int argc, char **argv)
 	};
 
 	(void)argc; (void)argv;
-	myargc = 8;
+	myargc = 7;
 	myargv = a;
 
 	I_StartupSystem();
 	I_SetTextInputMode(false);
-
 	if (chdir("sdmc:/3ds/srb2"))
 		I_Error("cant cd to sdmc:/3ds/srb2");
 

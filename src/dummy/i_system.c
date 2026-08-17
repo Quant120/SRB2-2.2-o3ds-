@@ -120,8 +120,24 @@ void I_Quit(void)
 void I_Error(const char *error,...)
 {
 	va_list a;
+
 	printf("\nit died:\n");
-	va_start(a,error); vprintf(error,a); va_end(a);
+	va_start(a,error);
+	vprintf(error,a);
+	va_end(a);
+	printf("\n\npress START\n");
+	fflush(stdout);
+
+	for (;;)
+	{
+		hidScanInput();
+
+		if (keysDown() & KEY_START)
+			break;
+
+		gspWaitForVBlank();
+	}
+
 	I_ShutdownSystem();
 	exit(-1);
 }

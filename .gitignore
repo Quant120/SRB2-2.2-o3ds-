@@ -27,3 +27,16 @@ Win32_LIB_ASM_Release
 /out
 /objs/VC10
 /thirdparty/vcpkg-overlays
+# 3DS build
+/build-3ds/
+*.3dsx
+*.cia
+*.elf
+*.map
+*.smdh
+*.bnr
+*.dmp
+
+# local build tools
+/makerom.exe
+/bannertool.exe

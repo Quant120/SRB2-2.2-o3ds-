@@ -7,22 +7,15 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
-ifeq ($(OS),Windows_NT)
-MAKEROM ?= $(TOPDIR)/makerom.exe
-BANNERTOOL ?= $(TOPDIR)/bannertool.exe
-else
-MAKEROM ?= makerom
-BANNERTOOL ?= bannertool
-endif
-
 TARGET := srb2-o3ds
 BUILD := build-3ds
 SOURCES := src src/blua src/netcode src/dummy
 INCLUDES := src src/blua src/netcode
 
 APP_TITLE := SRB2 2.2.15 o3DS POC
-APP_DESCRIPTION := proof of concept
-APP_AUTHOR := Quan120
+APP_DESCRIPTION := GFZ1 or bust
+APP_AUTHOR := poc build
+
 
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS := -g -Wall -O2 -std=gnu11 -fwrapv -mword-relocations -ffunction-sections $(ARCH)
@@ -32,11 +25,10 @@ CFLAGS += $(INCLUDE) -D__3DS__ -D_3DS -DCOMPVERSION -DNDEBUG \
 
 ASFLAGS := -g $(ARCH)
 LDFLAGS := -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,--gc-sections
-LIBS := -lSDL_mixer -lvorbisidec -lmikmod -logg -lmad -lSDL -lcitro3d -lpng -lz -lctru -lm
+LIBS := -lpng -lz -lctru -lm
 LIBDIRS := $(CTRULIB) $(PORTLIBS)
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
-
 export OUTPUT := $(CURDIR)/$(TARGET)
 export TOPDIR := $(CURDIR)
 export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
@@ -47,62 +39,29 @@ CFILES := $(shell cat src/Sourcefile) \
 	$(shell cat src/netcode/Sourcefile) \
 	$(shell cat src/dummy/Sourcefile) \
 	comptime.c
-
 export LD := $(CC)
 export OFILES_SOURCES := $(CFILES:.c=.o)
 export OFILES := $(OFILES_SOURCES)
 export HFILES :=
 export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 	$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-	$(foreach dir,$(LIBDIRS),-I$(dir)/include/SDL) \
 	-I$(CURDIR)/$(BUILD)
-
 export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export _3DSXDEPS := $(OUTPUT).smdh
+export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
 
-.PHONY: all clean cia
-
-all: cia
-
-cia: $(BUILD)
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.3ds cia
-
+.PHONY: all clean
+all: $(BUILD)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.3ds
 $(BUILD):
 	@mkdir -p $@
-
 clean:
-	@rm -fr $(BUILD) $(TARGET).smdh $(TARGET).elf $(TARGET).map $(TARGET).cia banner.bnr
-
+	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).map
 else
-
-.PHONY: cia
-
-cia: $(OUTPUT).cia
-
-$(OUTPUT).cia: $(OUTPUT).elf $(OUTPUT).smdh $(TOPDIR)/srb2-o3ds.rsf $(TOPDIR)/banner.bnr
-	@echo "Building CIA..."
-	@$(MAKEROM) -f cia -target t -o "$(OUTPUT).cia" \
-		-elf "$(OUTPUT).elf" \
-		-rsf "$(TOPDIR)/srb2-o3ds.rsf" \
-		-icon "$(OUTPUT).smdh" \
-		-banner "$(TOPDIR)/banner.bnr" \
-		-major 0 -minor 1 -micro 0
-
-$(TOPDIR)/banner.bnr: $(TOPDIR)/banner.png $(TOPDIR)/banner.wav
-	@echo "Building banner..."
-	@$(BANNERTOOL) makebanner \
-		-i "$(TOPDIR)/banner.png" \
-		-a "$(TOPDIR)/banner.wav" \
-		-o "$@"
-
+$(OUTPUT).3dsx: $(OUTPUT).elf $(_3DSXDEPS)
 $(OUTPUT).elf: $(OFILES)
-
 $(OUTPUT).smdh: $(TOPDIR)/icon.png
 	@echo "Generating SMDH metadata..."
-	@smdhtool --create "$(strip $(APP_TITLE))" \
-		"$(strip $(APP_DESCRIPTION))" \
-		"$(strip $(APP_AUTHOR))" \
-		"$(TOPDIR)/icon.png" "$@"
-
+	@smdhtool --create "$(strip $(APP_TITLE))" "$(strip $(APP_DESCRIPTION))" "$(strip $(APP_AUTHOR))" $(TOPDIR)/icon.png $@
 -include $(DEPSDIR)/*.d
-
 endif
