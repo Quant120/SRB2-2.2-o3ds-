@@ -32,3 +32,15 @@ See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_comp
 Sonic Team Junior is in no way affiliated with SEGA or Sonic Team. We do not claim ownership of any of SEGA's intellectual property used in SRB2.
 
 This is just a proof of concept don't expect egg Rock zone 2 to run at 60 fps ANY TIME SOON (impossible)
+
+Known levels to work:
+
+Gfz1 gfz2 thz1 thats it
+
+Known issues:
+
+It takes 8 minutes to boot up
+
+Can randomly crash
+
+AND I QUIT (its js a proof of concept what did u expect)
