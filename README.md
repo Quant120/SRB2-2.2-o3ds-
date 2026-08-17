@@ -15,7 +15,14 @@
 - libopenmpt (Linux/OS X only)
 
 ## Compiling
-Use msys2 or something then run make -f Makefile.3ds -j2 
+Build requirements:
+- devkitPro / devkitARM
+- makerom
+- bannertool
+
+On Windows, place makerom.exe and bannertool.exe in the project root, then build with:
+
+make -f Makefile.3ds -j2 (if you don't have a potato)
 
 See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_compiling)
 
