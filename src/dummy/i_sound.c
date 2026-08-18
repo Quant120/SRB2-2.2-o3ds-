@@ -11,7 +11,7 @@
 #include "../z_zone.h"
 #include "../byteptr.h"
 
-#define SAMPLERATE 22050
+#define SAMPLERATE 44100
 #define BUFFERSIZE 4096
 #define MUSICFILE "sdmc:/3ds/srb2/.srb2music.ogg"
 
