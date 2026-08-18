@@ -12,7 +12,7 @@
 #include "../byteptr.h"
 
 #define SAMPLERATE 22050
-#define BUFFERSIZE 1024
+#define BUFFERSIZE 4096
 #define MUSICFILE "sdmc:/3ds/srb2/.srb2music.ogg"
 
 UINT8 sound_started=false;
